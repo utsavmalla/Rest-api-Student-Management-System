@@ -26,7 +26,10 @@ class StudentController {
                 where: { guid: id },
                 include: [{
                     model: Subject,
-                    attributes: ['id', 'code', 'name']
+                    attributes: ['guid','name','code'],
+                    through:{
+                        attributes: []
+                    }
                 }]
             });
             // const record = await StudentInstance.findOne({where: {guid: id} });
@@ -42,45 +45,82 @@ class StudentController {
 
     //-create Students
     async create(req: Request, res: Response) {
-         ///--------update student if exist or create student if not   ///////
-        // const guid = UUIDV4
-        // try {
-        //     const { body } = req
-        //     const record = await Student.findOne({
-        //         where: { guid: body.guid }
-        //     })
-        //     console.log("1done")
-
-        //     if (record) {
-        //         const updatestd = await Student.update(req.body, { where: { guid: body.guid } });
-        //          return res.json({ updatestd, msg: 'Student Updated' })
-                
-
-        //     }
-
-        //     else{
-        //          const createdstd = await Student.create({ ...req.body, guid});
-        //         return res.json({ createdstd, msg: 'Student Created' })
-
-        //     }
-           
-
-            
-        // } catch (error) {
-        //     console.error(error)
-        // }
-
-        /////////----create student only---/////////////////////
-        const guid = UUIDV4();
         try {
-            const record = await Student.create({ ...req.body, guid });
-            // const record = await StudentInstance.create({ ...req.body, guid});
-            return res.json({ record, msg: 'Successfuly Created Student' })
-        } catch (error) {
-            return res.json({ msg: 'fail to create', status: 500, route: '/students' })
-            // console.error(error)
+            const  ids  = req.body.guid;
+            const guid = UUIDV4();
+
+            if (ids) {
+                const [updated] = await Student.update(req.body, { where: { guid: ids } });
+                if (updated) {
+                    const updatedPost = await Student.findOne({ where: { guid: ids } });
+                    return res.json({ updatedPost, msg: 'Successfuly updated student' });
+                }
+                throw new Error('Post not found');
+
+            } else {
+                const record = await Student.create({ ...req.body, guid: guid });
+                return res.json({ record, msg: 'Successfuly created student' })
+
+
+            }
+
+
+
+        } catch (e) {
+            console.log(e)
+            
         }
+
+
     }
+
+
+
+
+
+
+
+    ///--------update student if exist or create student if not   ///////
+    // const guid = UUIDV4
+    // try {
+    //     const { body } = req
+    //     const record = await Student.findOne({
+    //         where: { guid: body.guid }
+    //     })
+    //     console.log("1done")
+
+    //     if (record) {
+    //         const updatestd = await Student.update(req.body, { where: { guid: body.guid } });
+    //          return res.json({ updatestd, msg: 'Student Updated' })
+
+
+    //     }
+
+    //     else{
+    //          const createdstd = await Student.create({ ...req.body, guid});
+    //         return res.json({ createdstd, msg: 'Student Created' })
+
+    //     }
+
+
+
+    // } catch (error) {
+    //     console.error(error)
+    // }
+
+    /////////----create student only---/////////////////////
+    // const guid = UUIDV4();
+    // try {
+    //     const record = await Student.create({ ...req.body, guid });
+    //     // const record = await StudentInstance.create({ ...req.body, guid});
+    //     return res.json({ record, msg: 'Successfuly Created Student' })
+    // } catch (error) {
+    //     return res.json({ msg: 'fail to create', status: 500, route: '/students' })
+    //     // console.error(error)
+    // }
+
+
+
 
 
     //-delete Student records-------///////////
