@@ -24,7 +24,7 @@ class Student_SubjectsController {
                 })
                 .then(async (std) => {
 
-                    const {student_ids} = req.body
+                    const {subject_ids} = req.body
 
 
                     if (!std) {
@@ -34,7 +34,7 @@ class Student_SubjectsController {
 
                     }
 
-                    if(!student_ids) {
+                    if(!subject_ids) {
                         const deleted = await Student_Subjects.update({ deleted: Sequelize.fn('now') }, { where: { student_id: std.id } })
                         console.log("if prinf")
 
@@ -44,7 +44,7 @@ class Student_SubjectsController {
 
                     } else {
                         Subject
-                            .findOne({ attributes: ['id'], where: { guid: student_ids } })
+                            .findOne({ attributes: ['id'], where: { guid: subject_ids } })
                             .then(async (sub) => {
                                 const guid = UUIDV4();
                                 // if (!sub) {
