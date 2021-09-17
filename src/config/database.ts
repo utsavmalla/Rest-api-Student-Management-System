@@ -11,7 +11,7 @@ import Subject from '../subjects/model';
 const db = new Sequelize('StudentManagementDB','postgres', 'tesadmin',{
     host: 'localhost',
     dialect:'postgres',
-    logging: false,
+    // logging: false,
 });
 
 

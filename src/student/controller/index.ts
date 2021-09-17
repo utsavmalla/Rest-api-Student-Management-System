@@ -1,17 +1,102 @@
-import { Request, Response } from "express";
+import { query, request, Request, Response } from "express";
 import { Sequelize } from "sequelize";
+import { singularize } from "sequelize/types/lib/utils";
 import { v4 as UUIDV4 } from 'uuid';
 import Subject from "../../subjects/model";
 import Student from "../model";
 // import { StudentInstance } from "../model";
 
 
+// interface Props {
+//     page: number;
+//     pageSize: number;
+
+// }
+
 class StudentController {
+
     //-view all students
     async view(req: Request, res: Response) {
         try {
-            const record = await Student.findAll({ where: { deleted: null } });
+
+            let { pageSize, page} = req.query;
+            const orderBy = req.query.orderBy as string ;
+            const orderDir = req.query.orderDir as string ;
+            let realPage:number;
+            let realTake:number;
+            
+
+            if(pageSize) realTake = +pageSize
+            else{
+                pageSize = '10';
+                realTake = 10;
+            }
+
+            if (page) realPage = +page === 1 ? 0 : (+page - 1) * realTake;
+            else {
+              realPage = 0;
+              page = '1';
+            }
+
+            
+
+
+
+            const record = await Student.findAll(
+                {
+                    where: { deleted: null },
+                    order: [
+                        [orderBy, orderDir]
+                    ],
+                    limit: realTake,
+                    offset: realPage,
+                },
+
+            );
             return res.json(record)
+
+
+
+
+
+
+
+            //try 2///
+
+            // Reading Query Parameters
+            // const { page, pageSize } = req.query
+            // console.log("page :", page)
+            // console.log("pageSize :", pageSize)
+            // try {
+
+            //     const paginate = async ({ page, pageSize }: Props) => {
+            //         const offset = page * pageSize;
+            //         const limit = pageSize;
+
+            //         return {
+            //             offset,
+            //             limit,
+            //         };
+            //     };
+
+            //     //Finding all student query
+            //     const record = await Student.findAll(
+            //             {
+            //                 where: { deleted: null },
+            //                 order: [
+            //                     ['firstname', 'ASC']
+            //                 ],
+            //             },
+            //             paginate({ page, pageSize })
+            //         );
+
+
+            //     return res.json(record)
+
+            ///try 2 end
+
+
+
         } catch (error) {
             // return res.json({msg:'fail to send', status: 500, route:'/students'})
             console.error(error)
@@ -26,8 +111,8 @@ class StudentController {
                 where: { guid: id },
                 include: [{
                     model: Subject,
-                    attributes: ['guid','name','code'],
-                    through:{
+                    attributes: ['guid', 'name', 'code'],
+                    through: {
                         attributes: []
                     }
                 }]
@@ -46,7 +131,7 @@ class StudentController {
     //-create Students
     async create(req: Request, res: Response) {
         try {
-            const  ids  = req.body.guid;
+            const ids = req.body.guid;
             const guid = UUIDV4();
 
             if (ids) {
@@ -68,7 +153,7 @@ class StudentController {
 
         } catch (e) {
             console.log(e)
-            
+
         }
 
 
