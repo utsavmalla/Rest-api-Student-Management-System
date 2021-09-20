@@ -54,49 +54,6 @@ class StudentController {
 
             );
             return res.json(record)
-
-
-
-
-
-
-
-            //try 2///
-
-            // Reading Query Parameters
-            // const { page, pageSize } = req.query
-            // console.log("page :", page)
-            // console.log("pageSize :", pageSize)
-            // try {
-
-            //     const paginate = async ({ page, pageSize }: Props) => {
-            //         const offset = page * pageSize;
-            //         const limit = pageSize;
-
-            //         return {
-            //             offset,
-            //             limit,
-            //         };
-            //     };
-
-            //     //Finding all student query
-            //     const record = await Student.findAll(
-            //             {
-            //                 where: { deleted: null },
-            //                 order: [
-            //                     ['firstname', 'ASC']
-            //                 ],
-            //             },
-            //             paginate({ page, pageSize })
-            //         );
-
-
-            //     return res.json(record)
-
-            ///try 2 end
-
-
-
         } catch (error) {
             // return res.json({msg:'fail to send', status: 500, route:'/students'})
             console.error(error)
@@ -113,8 +70,10 @@ class StudentController {
                     model: Subject,
                     attributes: ['guid', 'name', 'code'],
                     through: {
+                        where: { deleted: null },
                         attributes: []
                     }
+
                 }]
             });
             // const record = await StudentInstance.findOne({where: {guid: id} });
@@ -158,53 +117,6 @@ class StudentController {
 
 
     }
-
-
-
-
-
-
-
-    ///--------update student if exist or create student if not   ///////
-    // const guid = UUIDV4
-    // try {
-    //     const { body } = req
-    //     const record = await Student.findOne({
-    //         where: { guid: body.guid }
-    //     })
-    //     console.log("1done")
-
-    //     if (record) {
-    //         const updatestd = await Student.update(req.body, { where: { guid: body.guid } });
-    //          return res.json({ updatestd, msg: 'Student Updated' })
-
-
-    //     }
-
-    //     else{
-    //          const createdstd = await Student.create({ ...req.body, guid});
-    //         return res.json({ createdstd, msg: 'Student Created' })
-
-    //     }
-
-
-
-    // } catch (error) {
-    //     console.error(error)
-    // }
-
-    /////////----create student only---/////////////////////
-    // const guid = UUIDV4();
-    // try {
-    //     const record = await Student.create({ ...req.body, guid });
-    //     // const record = await StudentInstance.create({ ...req.body, guid});
-    //     return res.json({ record, msg: 'Successfuly Created Student' })
-    // } catch (error) {
-    //     return res.json({ msg: 'fail to create', status: 500, route: '/students' })
-    //     // console.error(error)
-    // }
-
-
 
 
 

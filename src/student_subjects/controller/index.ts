@@ -10,9 +10,10 @@ import Student_Subjects from "../model";
 
 class Student_SubjectsController {
 
-     async addsubject(req: Request, res: Response) {
+    async addsubject(req: Request, res: Response) {
 
         try {
+            //find id of students for id params(guid)
             Student
                 .findOne({
                     attributes: ['id'], where: { guid: req.params.id },
@@ -23,9 +24,9 @@ class Student_SubjectsController {
                 })
                 .then(async (std) => {
 
-                    const {subject_ids} = req.body
+                    const { subject_ids } = req.body
 
-
+                    //throw errow if student id is not passed        
                     if (!std) {
                         return res.status(404).send({
                             message: 'Student Not Found',
@@ -33,7 +34,9 @@ class Student_SubjectsController {
 
                     }
 
-                    if(!subject_ids) {
+
+                    //Set null deleted coloumn in student table if subjects:['ids'] are not passed body.        
+                    if (!subject_ids) {
                         const deleted = await Student_Subjects.update({ deleted: Sequelize.fn('now') }, { where: { student_id: std.id } })
                         console.log("if prinf")
 
@@ -41,45 +44,92 @@ class Student_SubjectsController {
                             message: 'Subject Is Deleted from student',
                         });
 
+
+
                     } else {
 
-                        subject_ids.forEach((subIds: any) =>{
+                        let subjectsCollection= [] as number[];
 
-                         
-                                Subject
+                        //Loop subjects_ids(guids) array from req.body to get subject id    
+                        subject_ids.forEach((subIds: any) => {
+
+                            //finding id of subjects_ids
+                            Subject
                                 .findOne({ attributes: ['id'], where: { guid: subIds } })
                                 .then(async (sub) => {
                                     const guid = UUIDV4();
-    
+
+                                    //find subjects_id and student_id exist or not
                                     if (sub) {
 
-                                        const findmatch = await Student_Subjects.findOne({where:{
-                                            [Op.and]:[ {student_id: std.id,subject_id: sub.id }]
-                                        }
+                                        const findmatch = await Student_Subjects.findOne({
+                                            where: {
+                                                [Op.and]: [{ student_id: std.id, subject_id: sub.id }]
+                                            }
                                         });
-                                        if(findmatch == null){
-                                            console.log(sub, std)
-                                            console.log("test")
+                                        //add subjects id and student id to student_subjects table for realation
+                                        if (findmatch == null) {
+                                            // console.log(sub, std)
+                                            // console.log("test")
                                             const record = await Student_Subjects.create({ student_id: std.id, subject_id: sub.id, guid })
+                                            
+                                            //addiing subject id to subjectsCollections
+                                            
+                                            subjectsCollection.push(sub.id)
+                                            
                                             return res.json({ record, msg: 'stubject added to student' })
 
-                                        }else{
+
+                                        }
+
+
+
+                                        //if all the value pass in subjects_ids in req.body exits sent this msg
+                                        else {
                                             return res.json({ msg: 'subjects already exist' })
 
                                         }
-                                        
-                                       
-    
-    
+
                                     }
-    
-                                }).catch(function(err){
+
+                                }).catch(function (err) {
                                     res.json(err.message)
                                 })
 
-                            
+
                         })
-                      
+
+                        
+
+                        //adding null value to the student cols if subjects_ids is not passed in the body.
+
+                        const updated = await Student_Subjects.update({ deleted: Sequelize.fn('now') }, {
+                                        where: {
+                                            [Op.and]: [{ student_id: std.id }, { subjects_id: { [Op.notIn]: subjectsCollection } }
+                                            ]
+                                        }
+                                    })
+                                    return res.json({ updated })
+
+
+
+
+                        // console.log(subjectsCollection);
+                        // if (subjectsCollection) {
+                        //     subjectsCollection.forEach(async (subCols: any) => {
+                        //         const updated = await Student_Subjects.update({ deleted: Sequelize.fn('now') }, {
+                        //             where: {
+                        //                 [Op.and]: [{ student_id: std.id }, { subjects_id: { [Op.notIn]: subCols } }
+                        //                 ]
+                        //             }
+                        //         })
+                        //         return res.json({ updated })
+
+
+                        //     })
+
+                        // }
+
 
                     }
 
