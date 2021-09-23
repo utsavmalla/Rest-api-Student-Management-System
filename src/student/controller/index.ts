@@ -1,7 +1,10 @@
 import { query, request, Request, Response } from "express";
+import sequelize from "sequelize";
+import { QueryTypes } from "sequelize";
 import { Sequelize } from "sequelize";
 import { singularize } from "sequelize/types/lib/utils";
 import { v4 as UUIDV4 } from 'uuid';
+import db from "../../config/database";
 import Subject from "../../subjects/model";
 import Student from "../model";
 // import { StudentInstance } from "../model";
@@ -19,29 +22,27 @@ class StudentController {
     async view(req: Request, res: Response) {
         try {
 
-            let { pageSize, page} = req.query;
-            const orderBy = req.query.orderBy as string ;
-            const orderDir = req.query.orderDir as string ;
-            let realPage:number;
-            let realTake:number;
-            
+            let { pageSize, page } = req.query;
+            const orderBy = req.query.orderBy as string;
+            const orderDir = req.query.orderDir as string;
+            let realPage: number;
+            let realTake: number;
 
-            if(pageSize) realTake = +pageSize
-            else{
+            //pageing 
+            if (pageSize) realTake = +pageSize
+            else {
                 pageSize = '10';
                 realTake = 10;
             }
 
             if (page) realPage = +page === 1 ? 0 : (+page - 1) * realTake;
             else {
-              realPage = 0;
-              page = '1';
+                realPage = 0;
+                page = '1';
             }
 
-            
 
-
-
+            //query student limit record , group by name provided in parmas and order by types provied in params(suchs as 'ASC/DESC')
             const record = await Student.findAll(
                 {
                     where: { deleted: null },
@@ -60,23 +61,42 @@ class StudentController {
         }
     }
 
+
+
     //-view student by id
+    // async viewById(req: Request, res: Response) {
+    //     try {
+    //         const { id } = req.params;
+    //         const record = await Student.findOne({
+    //             where: { guid: id },
+    //             include: [{
+    //                 model: Subject,
+    //                 attributes: ['guid', 'name', 'code'],
+    //                 through: {
+    //                     where: { deleted: null },
+    //                     attributes: []
+    //                 }
+
+    //             }]
+    //         });
+    //         // const record = await StudentInstance.findOne({where: {guid: id} });
+    //         return res.json(record);
+    //     } catch (error) {
+    //         // return res.json({msg: 'fail to read', status: 500, route: '/student/:id'})
+    //         console.error(error)
+
+    //     }
+    // }
+
+
+    //-view student by id "using postgreSQL function (raw query)""
     async viewById(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const record = await Student.findOne({
-                where: { guid: id },
-                include: [{
-                    model: Subject,
-                    attributes: ['guid', 'name', 'code'],
-                    through: {
-                        where: { deleted: null },
-                        attributes: []
-                    }
+            const record = await db.query(`SELECT * FROM get_student_subjects('${id}')`, {
+                type: QueryTypes.SELECT
+            })
 
-                }]
-            });
-            // const record = await StudentInstance.findOne({where: {guid: id} });
             return res.json(record);
         } catch (error) {
             // return res.json({msg: 'fail to read', status: 500, route: '/student/:id'})
@@ -84,6 +104,9 @@ class StudentController {
 
         }
     }
+
+
+
 
 
 
@@ -143,10 +166,6 @@ class StudentController {
         }
 
     }
-
-
-
-
 
 }
 
