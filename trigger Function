@@ -1,0 +1,73 @@
+-------------Triger Function----------------
+---1.Function to add delete(timestamp) student_subject when subject is deleted  ------------------------------------
+-- FUNCTION: public.del_student_fromsub()
+
+-- DROP FUNCTION public.del_student_fromsub();
+
+CREATE FUNCTION public.del_student_fromsub()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE NOT LEAKPROOF
+AS $BODY$
+BEGIN
+	
+	UPDATE student_subjects
+	SET deleted = now()
+	WHERE subject_id = OLD.id AND deleted is null;
+	
+	RETURN NEW;
+END;
+$BODY$;
+
+ALTER FUNCTION public.del_student_fromsub()
+    OWNER TO postgres;
+    
+---2. Function to add delete(timestamp) student_subject when student is deleted------------------------------------------    
+    
+-- FUNCTION: public.del_subjects_fromstd()
+
+-- DROP FUNCTION public.del_subjects_fromstd();
+
+CREATE FUNCTION public.del_subjects_fromstd()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE NOT LEAKPROOF
+AS $BODY$
+BEGIN
+	UPDATE student_subjects
+	SET deleted = now()
+	WHERE student_id = OLD.id AND deleted is null;
+	
+	RETURN NEW;
+END;
+$BODY$;
+
+ALTER FUNCTION public.del_subjects_fromstd()
+    OWNER TO postgres;
+       
+    
+---------------------Trigger---------------------------
+---1. Trigger when subject is deleted---------------------------------------------
+-- Trigger: del_stdrel_fromsub
+
+-- DROP TRIGGER del_stdrel_fromsub ON public.subjects;
+
+CREATE TRIGGER del_stdrel_fromsub
+    BEFORE UPDATE 
+    ON public.subjects
+    FOR EACH ROW
+    EXECUTE FUNCTION public.del_student_fromsub();
+    
+--2. Trigger when student is deleted-----------------------------------------------    
+-- Trigger: del_subrel_fromstd
+
+-- DROP TRIGGER del_subrel_fromstd ON public.students;
+
+CREATE TRIGGER del_subrel_fromstd
+    BEFORE UPDATE 
+    ON public.students
+    FOR EACH ROW
+    EXECUTE FUNCTION public.del_subjects_fromstd();
+    
