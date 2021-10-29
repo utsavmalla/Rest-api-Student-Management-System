@@ -1,3 +1,4 @@
+----1. add subject function-------------------------------------
 -- FUNCTION: public.add_subjects(uuid, character varying)
 
 -- DROP FUNCTION public.add_subjects(uuid, character varying);
@@ -44,4 +45,50 @@ end;
 $BODY$;
 
 ALTER FUNCTION public.add_subjects(uuid, character varying)
+    OWNER TO postgres;
+
+
+
+-----2. add mark function --------------------------------
+-- FUNCTION: public.add_marks(uuid, json)
+
+-- DROP FUNCTION public.add_marks(uuid, json);
+
+CREATE OR REPLACE FUNCTION public.add_marks(
+	std_ids uuid,
+	mark_coll json)
+    RETURNS void
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE 
+	std_id integer;
+BEGIN
+	
+	select id 
+	into std_id 
+	from students 
+	where guid = std_ids;
+	if(std_id is not null) then
+	
+	CREATE TEMP TABLE temp_marks AS
+	SELECT json_data.key as key ,
+	json_data.value as value
+	FROM json_each_text(mark_coll) AS json_data; 
+	
+	UPDATE student_subjects as std_sub
+	SET marks = (tmp.value)::int
+	FROM temp_marks AS tmp
+	JOIN subjects sub ON sub.code = tmp.key and sub.deleted is null
+	WHERE sub.id = std_sub.subject_id AND std_sub.student_id = std_id AND std_sub.deleted is null;
+
+	
+														  
+																	 
+	end if;	
+END;
+$BODY$;
+
+ALTER FUNCTION public.add_marks(uuid, json)
     OWNER TO postgres;
