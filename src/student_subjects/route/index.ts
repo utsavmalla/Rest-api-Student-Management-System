@@ -13,12 +13,14 @@ const router = express.Router();
 
 
 
-
-
 //update sudject in students //test get
 router.put('/students/:id/subjects',
 Student_SubjectsController.addsubject
+)
 
+//update student marks on student_subject
+router.patch('/students/:id/subjects',
+Student_SubjectsController.addmark
 )
 
  export default router;

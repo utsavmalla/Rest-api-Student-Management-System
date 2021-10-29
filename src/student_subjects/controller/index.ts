@@ -26,6 +26,30 @@ class Student_SubjectsController {
         }
 
         }
+
+    async addmark(req: Request, res: Response) {
+        try{
+            const {id} = req.params;
+            const sub_coll = JSON.stringify(req.body)
+            const record = await db.query(`SELECT * FROM add_marks('${id}','${sub_coll}')`, {
+                type: QueryTypes.SELECT})
+
+            return res.json(record);
+        } catch (error){
+            console.error(error)
+        }
+    }    
+
+
+
+
+
+} 
+
+
+
+
+////query examples
         //sequlize query to add sub form body and del sub mot in sub body    
         // try {
         //     //find id of students for id params(guid)
@@ -134,7 +158,10 @@ class Student_SubjectsController {
         //     console.log(error)
 
         // }
+
+
+
     
-}
+
 
 export default new Student_SubjectsController;
