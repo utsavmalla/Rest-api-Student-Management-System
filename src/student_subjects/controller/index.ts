@@ -38,7 +38,23 @@ class Student_SubjectsController {
         } catch (error){
             console.error(error)
         }
-    }    
+    } 
+    
+    async viewResult(req: Request, res: Response) {
+        try{
+            const {id} = req.params;
+            const record = await db.query(`SELECT * FROM viewResult('${id}')`, {
+                type: QueryTypes.SELECT
+            })
+
+            return res.json(record);
+        } catch (error) {
+            // return res.json({msg: 'fail to read', status: 500, route: '/student/:id'})
+            console.error(error)
+        }
+
+        }
+
 
 
 

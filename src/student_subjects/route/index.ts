@@ -23,4 +23,9 @@ router.patch('/students/:id/subjects',
 Student_SubjectsController.addmark
 )
 
+router.get('/students/:id/result',
+Student_SubjectsController.viewResult
+)
+
+
  export default router;
