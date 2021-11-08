@@ -1,51 +1,55 @@
 --1)----Funtion to view result of students----------
-CREATE OR REPLACE FUNCTION viewResult(
+
+-- DROP FUNCTION public.viewresult(uuid);
+
+CREATE OR REPLACE FUNCTION public.viewresult(
 	std_ids uuid)
-RETURNS TABLE( subject_code varchar,
-			 subject_name varchar, mark int, total_marks bigint,percentage bigint,results text  )
-LANGUAGE 'plpgsql'
+    RETURNS TABLE(subject_code character varying, subject_name character varying, mark integer, total_marks integer, percentage integer, results text) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
 AS $BODY$
 declare
 	std_id integer;
 	total integer;
+	percnt integer;
 BEGIN
 	select id
 	into std_id
 	from students
 	where guid = std_ids;
+	
+	select sum(marks),sum(marks)/count(marks)
+	into total,percnt
+	from students std
+	join student_subjects std_sub on std_sub.student_id = std.id
+	where std.id = std_id;
+	
 	if(std_id is not null)then
 		RETURN QUERY
-		with cte_student as (
-			select sub.code as subject_code,sub.name as subject_name,stu_sub.marks as mark,
-			(select SUM(student_subjects.marks) 
-			 from student_subjects
-			 where student_id = std_id) as total_marks,
-			 (select ((SUM(student_subjects.marks))/count(student_subjects.marks))
-			 from student_subjects
-			 where student_id = std_id) as percentage
-			 
-		
-			from student_subjects AS stu_sub
-			JOIN subjects sub ON sub.id = stu_sub.subject_id and sub.deleted is null
-			where student_id = std_id and marks is not null
-			GROUP BY subject_code,subject_name,mark
-			)
-			
-			select cte_student.subject_code, cte_student.subject_name,cte_student.mark,cte_student.total_marks,cte_student.percentage,
-			(CASE 
-			  WHEN cte_student.percentage <=40 
+		select sub.code as subject_code,sub.name as subject_name,std_sub.marks as mark,total as total_marks,
+		percnt as percentage,
+		(CASE 
+			  WHEN percnt <=40 
 			  THEN 'fail'
-			  WHEN cte_student.percentage> 40 AND  cte_student.percentage<= 55
+			  WHEN percnt> 40 AND percnt<= 55
 			  THEN 'Third'
-			 WHEN cte_student.percentage> 55 AND cte_student.percentage<= 60
+			 WHEN percnt> 55 AND percnt<= 60
 			  THEN 'Second'
-			 WHEN cte_student.percentage> 60 AND cte_student.percentage<= 65
+			 WHEN percnt> 60 AND percnt<= 65
 			  THEN 'First'
-			 WHEN cte_student.percentage> 65 
+			 WHEN percnt> 65
 			  THEN 'Distinction'
 			  END) as results
 			
-			from cte_student; 
+			from student_subjects std_sub
+			join subjects sub on sub.id = std_sub.subject_id
+			where std_sub.student_id = std_id;
+			
+			
+			
 			
 			
 			
@@ -53,7 +57,10 @@ BEGIN
 	END IF;		
 	
 END;
-$BODY$
+$BODY$;
+
+ALTER FUNCTION public.viewresult(uuid)
+    OWNER TO postgres;
 
 
 -----Function parameter---------------------
